@@ -1,167 +1,172 @@
 import random
-import tkinter
-from tkinter.font import BOLD
+import os
+import time
 
-gameWindow = tkinter.Tk()
+class Blackjack():
 
+    def __init__(self, player_hand, dealer_hand):
+        self.player_hand = player_hand
+        self.dealer_hand = dealer_hand
 
-# function for retrieving the images of the cards from device
-def getCardImages(card_images):
-    suits = ['heart', 'club', 'diamond', 'spade']
-    faceCards = ['jack', 'queen', 'king']
-
-    ext= 'png'
-    for suit in suits:
-        # adding the number cards 1 to 13
-        for card in range(1, 14):
-            name = 'C:/Users/DELL/Downloads/cards/{}_{}.{}'.format(str(card), suit, ext)
-            image = tkinter.PhotoImage(file=name)
-            card_images.append((card, image, ))
-
-        # adding the face cards
-        for card in faceCards:
-            name = 'C:/Users/DELL/Downloads/cards/{}_{}.{}'.format(str(card), suit, ext)
-            image = tkinter.PhotoImage(file=name)
-            card_images.append((10, image, ))
-
-
-def getCard(frame):
-    # pop the card on the top of the deck
-    next_card = deck.pop(0) 
-    # and add it to the deck at the end
-    deck.append(next_card)
-
-    tkinter.Label(frame, image=next_card[1], relief="raised").pack(side="left")
-    return next_card
-
-# Function to calculate the total score of all cards in the list
-def calcScore(hand):
-    score = 0
-    ace = False
-    for next_card in hand:
-        card_value = next_card[0]
-        # Ace is considered as 11 only once and rest of the time it is taken as 1 
-        if card_value == 1 and not ace:
-            ace = True
-            card_value = 11
-        score += card_value
-        # if its a bust, check if there is an ace and subtract 10
-        if score > 21 and ace:
-            score -= 10
-            ace = False
-    return score
-
-#Show the winner when the player stays
-def staying():
-    dealer_score = calcScore(dealer_hand)
-    while 0 < dealer_score < 17:
-        dealer_hand.append(getCard(dealer_cardFrame))
-        dealer_score = calcScore(dealer_hand)
-        dealerScore.set(dealer_score)
-
-    player_score = calcScore(player_hand)
-    if player_score > 21 or dealer_score > player_score:
-        winner.set("Dealer wins!")
-    elif dealer_score > 21 or dealer_score < player_score:
-        winner.set("Player wins!")
-    else:
-        winner.set("Draw!")
-
-#Show the winner when the player hits
-def hitting():
-    player_hand.append(getCard(player_card_frame))
-    player_score = calcScore(player_hand)
-
-    playerScore.set(player_score)
-    if player_score > 21:
-        winner.set("Dealer Wins!")
-
-
-def initial_deal():
-    hitting()
-    dealer_hand.append(getCard(dealer_cardFrame))
-    dealerScore.set(calcScore(dealer_hand))
-    hitting()
-
-
-def new_game():
-    global dealer_cardFrame
-    global player_card_frame
-    global dealer_hand
-    global player_hand
-    # embedded frame to hold the card images
-    dealer_cardFrame.destroy()
-    dealer_cardFrame = tkinter.Frame(gameWindow, bg="black")
-    dealer_cardFrame.place(x=100,y=80)
+    def prepare_deck():
+        deck = ['AH','2H','3H','4H','5H','6H','7H','8H','9H','TH','JH','QH','KH',
+                'AD','2D','3D','4D','5D','6D','7D','8D','9D','TD','JD','QD','KD',
+                'AS','2S','3S','4S','5S','6S','7S','8S','9S','TS','JS','QS','KS',
+                'AC','2C','3C','4C','5C','6C','7C','8C','9C','TC','JC','QC','KC']
+        random.shuffle(deck)
+        shuffled_deck = deck
+        return shuffled_deck        
     
-    
-    player_card_frame.destroy()
-    player_card_frame = tkinter.Frame(gameWindow, bg="black")
-    player_card_frame.place(x=100,y=200)
+    def deal_card(player, deck):
+        player.append(deck.pop())
+        return player
 
-    winner.set("")
+    def show_hands(player, dealer):
+        card_num = 0
+        player_hand_string = ", ".join(player)
+        dealer_hand_string = ""
+        for card in dealer:
+            if card_num == 0:
+                dealer_hand_string += card
+                card_num += 1
+            else:
+                dealer_hand_string += ", ??"
+        return f"Your hand: {player_hand_string}\nDealer's hand: {dealer_hand_string}"
 
-    # Create the list to store the dealer's and player's hands
-    dealer_hand = []
-    player_hand = []
-    initial_deal()
+    def score_hand(hand):
+        hand_value = 0
+        for card in hand:
+            if card[0] == 'A':
+                hand_value += 1
+            elif card[0] == '2':
+                hand_value += 2
+            elif card[0] == '3':
+                hand_value += 3
+            elif card[0] == '4':
+                hand_value += 4
+            elif card[0] == '5':
+                hand_value += 5
+            elif card[0] == '6':
+                hand_value += 6
+            elif card[0] == '7':
+                hand_value += 7
+            elif card[0] == '8':
+                hand_value += 8
+            elif card[0] == '9':
+                hand_value += 9
+            elif card[0] == 'T':
+                hand_value += 10
+            elif card[0] == 'J':
+                hand_value += 10
+            elif card[0] == 'Q':
+                hand_value += 10
+            elif card[0] == 'K':
+                hand_value += 10
+        return hand_value 
+
+    def ace_check(hand):
+        for card in hand:
+            if card[0] == 'A':
+                while True:
+                    answer = input("Would you like to change your Ace value from 1 to 11?\n'Y' or 'N': ")
+                    if answer.lower().strip() == 'y':
+                        return 10
+                    elif answer.lower().strip() == 'n':
+                        return 0
+                    else:
+                        os.system("cls")
+                        print("Invalid input, please try again")
+        return 0
+
+    def main():
+        os.system("cls")
+        print("-----Welcome to Blackjack!-----")
+        while True:
+            os.system("cls")
+            answer = input("Would you like to Play or Quit?\n'P' or 'Q': ")
+            if answer.lower().strip() == 'q':
+                os.system("cls")
+                print("Goodbye")
+                break
+            elif answer.lower().strip() == 'p':
+                while True:
+                    os.system("cls")
+                    current_deck = Blackjack.prepare_deck() 
+                    player_hand = []
+                    dealer_hand = []
+                    Blackjack.deal_card(dealer_hand, current_deck)
+                    Blackjack.deal_card(player_hand, current_deck)
+                    Blackjack.deal_card(dealer_hand, current_deck)
+                    Blackjack.deal_card(player_hand, current_deck)
+                    player_score = Blackjack.score_hand(player_hand)
+                    dealer_score = Blackjack.score_hand(dealer_hand)
+                    print(Blackjack.show_hands(player_hand, dealer_hand))
+                    print(f'Your hand score is {player_score}!')
+                    while True:
+                        answer = input("Would you like to Hit, Stand, or Quit?\n'H', 'S' or 'Q': ")
+                        if answer.lower().strip() == 'h':
+                            os.system("cls")
+                            Blackjack.deal_card(player_hand, current_deck)
+                            player_score = Blackjack.score_hand(player_hand)
+                            print(Blackjack.show_hands(player_hand, dealer_hand))
+                            print(f'Your hand score is {player_score}!')
+                            if player_score > 21:
+                                time.sleep(2)
+                                os.system("cls")
+                                print("Bust!")
+                                time.sleep(2)
+                                break
+                        elif answer.lower().strip() == 's':
+                            os.system("cls")
+                            print(Blackjack.show_hands(player_hand, dealer_hand))
+                            print(f'Your hand score is {player_score}!')
+                            player_score += Blackjack.ace_check(player_hand)
+                            os.system("cls")
+                            print(Blackjack.show_hands(player_hand, dealer_hand))
+                            print(f'Your hand score is {player_score}!')
+                            if player_score > 21:
+                                time.sleep(2)
+                                os.system("cls")
+                                print("Bust!")
+                                time.sleep(2)
+                                break
+                            while dealer_score < 17:
+                                Blackjack.deal_card(dealer_hand, current_deck)
+                                dealer_score = Blackjack.score_hand(dealer_hand)
+                                os.system("cls")
+                                print(Blackjack.show_hands(player_hand, dealer_hand))
+                                print(f'Your hand score is {player_score}!')
+                                time.sleep(2)
+                            if player_score == dealer_score:
+                                os.system("cls")
+                                print("Tie, Dealer Wins!")
+                                time.sleep(2)
+                                break
+                            elif dealer_score > 21:
+                                os.system("cls")
+                                print("Dealer Bust, Player Wins!")
+                                time.sleep(2)
+                                break
+                            elif player_score > dealer_score:
+                                os.system("cls")
+                                print("Player Wins!")
+                                time.sleep(2)
+                                break
+                            elif player_score < dealer_score:
+                                os.system("cls")
+                                print("Dealer Wins!")
+                                time.sleep(2)
+                                break
+                        elif answer.lower().strip() == 'q':
+                            break
+                        else:
+                            os.system("cls")
+                            print("Invalid input, please try again")
+                    break
+                    
+            else:
+                os.system("cls")
+                print("Invalid input, please try again")
 
 
-def shuffle():
-    random.shuffle(deck)
-
-gameWindow = tkinter.Tk()
-
-# Set up the screen and frames for the dealer and player
-gameWindow.title("MJs Black Jack")
-gameWindow.geometry("640x480")
-
-tkinter.Label(gameWindow, text='MJs Black Jack',
-      fg='black', font=('Courier', 20,BOLD)).place(x=150, y=10)
-
-winner=tkinter.StringVar()
-result = tkinter.Label(gameWindow, textvariable=winner,fg='black',font=('Courier', 15))
-result.place(x=250,y=50)
-
-dealerScore = tkinter.IntVar()
-tkinter.Label(gameWindow, text="Dealer Score:", fg="black",bg="white").place(x=10,y=80)
-tkinter.Label(gameWindow, textvariable=dealerScore, fg="black",bg="white").place(x=10,y=100)
-# embedded frame to hold the card images
-dealer_cardFrame = tkinter.Frame(gameWindow, bg="black")
-dealer_cardFrame.place(x=100,y=80)
-
-playerScore = tkinter.IntVar()
-
-tkinter.Label(gameWindow, text="Player Score:", fg="black",bg="white").place(x=10,y=200)
-tkinter.Label(gameWindow, textvariable=playerScore,fg="black",bg="white").place(x=10,y=220)
-# embedded frame to hold the card images
-player_card_frame = tkinter.Frame(gameWindow, bg="black")
-player_card_frame.place(x=100,y=200)
-
-player_button = tkinter.Button(gameWindow, text="Hit", command=hitting, padx=8)
-player_button.place(x=50,y=350)
-
-dealer_button = tkinter.Button(gameWindow, text="Stay", command=staying, padx=5)
-dealer_button.place(x=150,y=350)
-
-reset_button = tkinter.Button(gameWindow, text="New Game", command=new_game)
-reset_button.place(x=250,y=350)
-
-shuffle_button = tkinter.Button(gameWindow, text="Shuffle", command=shuffle, padx=2)
-shuffle_button.place(x=380,y=350)
-# load cards
-cards = []
-getCardImages(cards)
-
-deck = list(cards) + list(cards) + list(cards)
-shuffle()
-
-dealer_hand = []
-player_hand = []
-initial_deal()
-
-gameWindow.mainloop()
-
-
-
-
+Blackjack.main()
